@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>PromeRotation.Sample</AssemblyName>
+    <RootNamespace>PromeRotation.Sample</RootNamespace>
+  </PropertyGroup>
+
+</Project>

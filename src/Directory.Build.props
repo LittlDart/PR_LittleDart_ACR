@@ -1,0 +1,28 @@
+﻿<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+    <PromeSdkVersion>0.1.0-preview.3</PromeSdkVersion>
+    <ECommonsVersion>3.2.1.22</ECommonsVersion>
+
+    <NoWarn>$(NoWarn);CS1998;CS0414;CS0649;CS0169;CS0105;CS0436;CS1591;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8618;CS8620;CS8625;CS8509;CA2211;IDE1006;IDE0300;NU1603</NoWarn>
+
+    <WarningsAsErrors>CS4014</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PromeRotation.SDK.CNGL" Version="$(PromeSdkVersion)" />
+    <PackageReference Include="ECommons" Version="$(ECommonsVersion)" />
+  </ItemGroup>
+
+</Project>

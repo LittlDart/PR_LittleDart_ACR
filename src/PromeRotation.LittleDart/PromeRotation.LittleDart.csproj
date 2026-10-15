@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>LittleDart</AssemblyName>
+    <RootNamespace>LittleDart</RootNamespace>
+
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Resources\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="GenerateBuildStampFile" BeforeTargets="CoreCompile" DependsOnTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_BuildStampValue>$([System.DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss')) $(Configuration)</_BuildStampValue>
+      <_BuildStampLine>[assembly: System.Reflection.AssemblyMetadata("BuildStamp", "$(_BuildStampValue)")]</_BuildStampLine>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)BuildStamp.g.cs"
+                      Lines="$(_BuildStampLine)"
+                      Overwrite="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)BuildStamp.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)BuildStamp.g.cs" />
+    </ItemGroup>
+  </Target>
+
+</Project>
