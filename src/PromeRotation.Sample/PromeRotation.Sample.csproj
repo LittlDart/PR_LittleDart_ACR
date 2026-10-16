@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    公共设置与 NuGet 引用都在 ..\Directory.Build.props 里。
+    新建自己的 ACR 工程时，照抄这个文件，只改下面两行即可。
+  -->
+
+  <PropertyGroup>
+    <AssemblyName>PromeRotation.Sample</AssemblyName>
+    <RootNamespace>PromeRotation.Sample</RootNamespace>
+  </PropertyGroup>
+
+</Project>
