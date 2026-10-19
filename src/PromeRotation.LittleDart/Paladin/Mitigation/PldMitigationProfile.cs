@@ -1,0 +1,80 @@
+﻿using System;
+using Dalamud.Game.ClientState.Objects.Types;
+using LittleDart.Common.Mitigation;
+using LittleDart.Paladin.Mitigation.Calc;
+using LittleDart.Paladin.Setting;
+using PromeRotation.Core;
+using PromeRotation.Data;
+using PromeRotation.Extensions;
+using PromeRotation.Helpers;
+using LittleDart.Paladin.Skill;
+
+namespace LittleDart.Paladin.Mitigation;
+
+public static class PldMitigationProfile
+{
+	public static readonly MitigationJobProfile Instance = Build();
+
+	private static MitigationJobProfile Build()
+	{
+		return new MitigationJobProfile
+		{
+			JobName = "骑士",
+			LogPrefix = "[LittleDart-PLD/Mit]",
+			CommandHint = "/LittleDart-PLD mit",
+			Registry = MitigationConfig.Registry,
+			LevelTable = LevelMitigationProfile.Table,
+			ReprisalSkillId = PldSkills.血仇,
+			RefreshThresholds = RefreshThresholds,
+			CanRun = () => PldSettings.Instance != null,
+			IsDailyMode = PldHelper.IsDailyMode,
+			AutoMitigationQt = () => PromeSettings.Instance.GetQt(PldQt.UseAutoMitigation),
+			StopAttackQt = () => PromeSettings.Instance.GetQt(PldQt.StopAttack),
+			DailyModeQt = () => PromeSettings.Instance.GetQt(PldQt.DailyMode),
+			Me = () => Core.Me,
+			CurrentTarget = PldHelper.GetCurrentTarget,
+			HasValidTarget = PldHelper.HasValidTarget,
+			HasTankStance = PldHelper.HasTankStance,
+			HasSelfAura = (uint id) => PldHelper.HasAura(id),
+			TargetAuraTimeLeft = PldHelper.GetTargetAuraTimeLeft,
+			IsRecentlyCast = (uint id, int ms) => PldHelper.IsRecentlyCast(id, ms),
+			IsReadyWithCanCast = IsReadyWithCanCast,
+			HasResourceFor = (MitigationSkillDef def) => PldHelper.GetOath() >= def.ResourceCost,
+			IsEnemy = (IBattleChara chara) => BattleCharaExtensions.IsEnemy(chara),
+			NearbyEnemyCount = (float radius) => PldHelper.GetNearbyEnemyCount((int)Math.Round(radius)),
+			DistanceTo = (IBattleChara chara) => PldHelper.GetDistanceTo(chara),
+			DistanceToTarget = PldHelper.GetDistanceToTarget,
+			DiagnosticsEnabled = () => Diagnostics.Enabled,
+			IsLocalPlayerMoving = () => PldHelper.IsMoving(),
+			InBossRoom = MitigationBossRoom.Probe,
+			Log = PldHelper.LogTagged,
+			BuildAction = (MitigationSkillDef def) => (!def.SelfTarget) ? PldAction.Enemy(def.SkillId, ActionType.OffGcd) : PldAction.Self(def.SkillId, ActionType.OffGcd)
+		};
+	}
+
+	private static bool IsReadyWithCanCast(MitigationSkillDef def)
+	{
+		if (!def.SelfTarget)
+		{
+			return PldHelper.IsReadyWithCanCast(def.SkillId);
+		}
+		return ActionHelper.CanCast(def.SkillId, (IBattleChara)null);
+	}
+
+	private static void RefreshThresholds()
+	{
+		MitigationThresholds thresholds = Instance.Thresholds;
+		PldSettings instance = PldSettings.Instance;
+		if (instance != null)
+		{
+			thresholds.RequireTankStance = instance.MitigationRequireTankStance;
+			thresholds.DamageWindowMs = instance.MitigationDamageWindowMs;
+			thresholds.EnemyCountRadius = instance.MitigationEnemyCountRadius;
+			thresholds.WaveEndDebounceMs = instance.MitigationWaveEndDebounceMs;
+			thresholds.ReprisalMinEnemiesIn5m = instance.MitigationReprisalMinEnemiesIn5m;
+			thresholds.TargetDeathSkipSeconds = instance.MitigationTargetDeathSkipSeconds;
+			thresholds.TargetDeathSkipCooldownSeconds = instance.MitigationTargetDeathSkipCooldownSeconds;
+			thresholds.InvulnHpPercent = instance.MitigationInvulnHpPercent;
+		}
+	}
+}
