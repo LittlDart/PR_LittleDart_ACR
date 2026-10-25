@@ -1,0 +1,79 @@
+# PromeRotation ACR 开发工作区 · 忽略规则
+
+## 构建产物
+bin/
+obj/
+dist/
+artifacts/
+*.user
+*.suo
+.vs/
+.idea/
+
+## 反编译参考与解包的 SDK
+# refs\ 下是从 NuGet 包和本机插件反编译出来的第三方源码，
+# 体积大、可再生（见 scripts\decompile-refs.ps1），不进版本库。
+refs/decompiled/
+refs/sdk/
+# 原始 .nupkg 只在 libs\packages\ 存一份（那是 NuGet 离线兜底源要用的），
+# refs\nupkg\ 只是下载时的落脚点，重复的 7 MB 不进库。
+refs/nupkg/
+# refs\external\ 是第三方仓库的源码快照（只读参考，无许可证），同样不进库。
+# 详见 refs\external\SOURCE.txt
+refs/external/
+
+## 本地兜底 NuGet 源
+# 这里是离线还原用的 .nupkg，体积大但迁机时要带上。
+# 如果仓库要瘦身，可以把这行放开，代价是离线还原失效。
+# libs/packages/*.nupkg
+
+## 备份
+backups/
+
+## 临时
+.tmp-*
+*.log
+# .dsh-ops\ 是给 agent 用的临时工作区：第三方仓库克隆（如 Nag0miACR 源码对照）、
+# 一次性脚本、文档预览图。都是可再生的，且**绝不能把别人的源码提交进本仓库**。
+.dsh-ops/
+# DSH 的临时工作区：反编译中间产物、一次性验证工具、改文件前的备份。
+# 都是可再生的，体积不小（600+ 文件），不进库。
+.dsh/tmp/
+# 根目录下的一次性调试落盘（木桩日志等），不是源码
+gnb-debug-*.txt
+# 2026-10 本工作区 docs\ 权限修复的记录（含本机 ACL，机器相关）
+acl-recovery/
+
+## Python 离线仿真脚本的运行产物
+# sim\ 与 scripts\ 下的 *.py 是可复现的分析脚本（进库），
+# 但 __pycache__ 是解释器吐的字节码，不进库。
+__pycache__/
+*.pyc
+
+## 本机审计 / 取证工作区（2026-10-25 清理）
+# .audit\ 与 scratch\ 是本机只读取证目录，可再生；但 .audit\official-conformance\*.md 与
+# .audit\tools\scan_check_purity.py 仍被已入库的 docs\37/38 引用 ⇒ 只忽略，不整体删除。
+/.audit/
+/scratch/
+# 根目录手写的 --out 产物（CLI 默认输出是 sim-plan-out，插件写 %APPDATA%\...\PromeSim\out）
+/out/
+# 取图脚本的一次性素材（仅未跟踪的 scripts\_tmp_fetch_icons.cjs 用过）
+/assets/
+
+## 未定稿 / 含第三方代码摘录的本机文档（按 docs\39 §11.3 不入库）
+# 31/32 含 Nag0miACR（上游无 LICENSE）源码摘录；34/35/36/39 是未定稿任务单；
+# 42-与Nag0mi 与已入库的 docs\42-QT死键删除… 同号；49 是根因报告，留本机。
+docs/31-*
+docs/32-*
+docs/34-*
+docs/35-*
+docs/36-*
+docs/39-*
+docs/42-与Nag0mi*
+docs/49-*
+
+## 文档派生物（.md 是源，.docx 由 md 转换）
+docs/*.docx
+
+## 一次性取图脚本（2026-10 图标抓取用，别再提交）
+/scripts/_tmp_fetch_icons.cjs
