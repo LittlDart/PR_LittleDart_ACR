@@ -1,0 +1,52 @@
+﻿<Project>
+
+  <!--
+    PromeRotation ACR 工作区 · src\ 下的公共编译设置
+
+    为什么放在 src\ 而不是工作区根：
+      根目录下以后可能还要放 tools\（.NET 写的辅助工具），那些工具不需要
+      PromeRotation 的引用，也不该被 net10.0-windows / AllowUnsafeBlocks 影响。
+
+    为什么把两个 PackageReference 写在这里：
+      1. PromeRotation.SDK.CNGL —— ACR 唯一必需的编译期引用。
+         它自带 Dalamud / Lumina / ImGui / FFXIVClientStructs 引用程序集。
+      2. ECommons —— SDK 的 nuspec 声明依赖的是 `ECommons >= 3.2.0.3`，
+         但 nuget.org 上**没有 3.2.0.3 这个版本**（最低是 3.2.1.6）。
+         不显式钉版本，每次还原都会刷 NU1603 警告（"没有找到 ECommons 3.2.0.3，
+         已改为解析 3.2.1.22"）。这里显式钉死，警告消失、版本可控。
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- ACR 的依赖由游戏里的 Dalamud / PromeRotation 宿主提供，不要复制进产物目录 -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <!-- 产物直接落在 bin\<配置>\，不带 TFM 子目录，方便部署脚本抄 dll -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+    <!-- 版本集中在这里改 -->
+    <PromeSdkVersion>0.1.0-preview.3</PromeSdkVersion>
+    <ECommonsVersion>3.2.1.22</ECommonsVersion>
+
+    <!--
+      ACR 里有些约定俗成的写法会让编译器唠叨（ReSharper/Roslyn 的命名与简化建议等）。
+      这份清单抄自 AE 时代的工程，PR 侧暂时沿用；出现新的噪音再往这里加。
+    -->
+    <NoWarn>$(NoWarn);CS1998;CS0414;CS0649;CS0169;CS0105;CS0436;CS1591;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8618;CS8620;CS8625;CS8509;CA2211;IDE1006;IDE0300;NU1603</NoWarn>
+
+    <!-- async 方法忘了 await 当错误处理 -->
+    <WarningsAsErrors>CS4014</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PromeRotation.SDK.CNGL" Version="$(PromeSdkVersion)" />
+    <PackageReference Include="ECommons" Version="$(ECommonsVersion)" />
+  </ItemGroup>
+
+</Project>

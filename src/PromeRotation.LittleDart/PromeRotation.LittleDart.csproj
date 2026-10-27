@@ -1,0 +1,85 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    LittleDart ACR（绝枪战士 Gunbreaker + 骑士 Paladin + 公共层）· PR 侧
+
+    公共设置与 NuGet 引用都在 ..\Directory.Build.props 里。
+
+    ⚠️ 本工程的源码目录是从部署目录里的 LittleDart.dll + .pdb 反编译重建的
+       （2026-10 误删了源码目录且未进版本控制）。
+       重建脚本：scripts\rebuild-littledart.ps1 —— 注意它会**清空本目录**，
+       重建后需要把本文件再放回来。
+
+    AssemblyName 必须与部署目录名一致，否则 PR 加载 ACR 时对不上。
+  -->
+
+  <PropertyGroup>
+    <AssemblyName>LittleDart</AssemblyName>
+    <RootNamespace>LittleDart</RootNamespace>
+
+    <!--
+      源码里带一份重建出来的 Properties\AssemblyInfo.cs（含原作者写的 BuildStamp）。
+      它是反编译产物，和 SDK 自动生成的 AssemblyInfo 会撞（CS0579 重复特性），
+      所以关掉自动生成、只用文件里那一份。
+
+      ⚠️ 2026-10-15：**仍然必须关着**。BuildStamp 不再写在这份文件里，
+         改由下面 GenerateBuildStampFile 目标在编译时生成（见那段注释）。
+    -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <!--
+    ★ 2026-10-15：把 Resources\ 里的热键图标拷进产物目录。
+
+    为什么：热键面板的自定义图标（骑士九宫格支援 / 绝枪六宫格支援 / 清扫队列）
+    靠**绝对路径**加载：
+      <pluginConfigs>\PromeRotation\ACR\<作者名>\Resources\<文件名>
+    （见 Paladin\Hotkey\PldHotkeyIcon.cs 与 Gunbreaker\Hotkey\GnbHotkeyIcon.cs）。
+    而 deploy-acr.ps1 的「图标资源」那一段是从 **产物目录**（bin\<配置>\Resources）
+    往 ACR 目录拷的 —— 产物目录里没有 Resources\ 时它只打一句提示、然后**静默跳过**，
+    结果就是「dll 更新了、图标还是旧的 / 根本没有」，图标退化成技能自带图标。
+
+    所以这里显式声明：Resources\ 下所有文件 → 产物目录 Resources\
+    （CopyToOutputDirectory + PreserveNewest：改了图才会重拷）。
+    这样「dotnet build → deploy-acr.ps1」两步就能把图标带上，不再依赖手抄。
+  -->
+  <ItemGroup>
+    <None Include="Resources\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    ★ 2026-10-15：BuildStamp 改成**编译时生成**。
+
+    为什么：原来那份 Properties\AssemblyInfo.cs（反编译重建产物）里的
+      [assembly: AssemblyMetadata("BuildStamp", "2026-10-14 00:17")]
+    是**写死的字符串**，而本工程 GenerateAssemblyInfo=false ⇒ 编译时永远不会更新它。
+    后果：GnbRotationEventHandler / PldRotationEventHandler 打的那句
+      「欢迎使用 … <Build 2026-10-14 00:17>」
+    永远同一个值 ⇒「改了源码、游戏里却跑着旧 dll」这条防线（docs\16 里写的）**是哑的**。
+
+    做法：不动 GenerateAssemblyInfo，改成生成一个**只含 BuildStamp 一条特性**的 .cs
+    丢在 obj\ 下（$(IntermediateOutputPath)），编译前塞进 Compile。
+    ⇒ 不写工作区里的任何文件（不脏 git），也不会和 AssemblyInfo.cs 里的特性撞。
+    ⇒ 值 = 编译时刻 + 配置，例：<Build 2026-10-15 03:20:11 Release>
+       （带上 Debug / Release 是故意的 —— docs\16 那次事故正是「Debug 编了、Release 却部署上去」）
+
+    怎么核对游戏里跑的是哪一版：
+      · 加载 ACR 后，在 `%APPDATA%\XIVLauncherCN\dalamud.log` 里搜
+        「欢迎使用 LittleDart 绝枪战士 ACR」（或者游戏内 `/xllog` 打开 Dalamud 日志窗口）；
+      · 或者直接核 ACR 目录里 dll 的 SHA256（VERSION 一行没有 SHA，但这句 Build 有配置和时间）。
+  -->
+  <Target Name="GenerateBuildStampFile" BeforeTargets="CoreCompile" DependsOnTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_BuildStampValue>$([System.DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss')) $(Configuration)</_BuildStampValue>
+      <_BuildStampLine>[assembly: System.Reflection.AssemblyMetadata("BuildStamp", "$(_BuildStampValue)")]</_BuildStampLine>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)BuildStamp.g.cs"
+                      Lines="$(_BuildStampLine)"
+                      Overwrite="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)BuildStamp.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)BuildStamp.g.cs" />
+    </ItemGroup>
+  </Target>
+
+</Project>
